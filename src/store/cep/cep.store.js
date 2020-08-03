@@ -1,21 +1,19 @@
-import { SET_ENDERECO, SET_NUMERO_CEP, SET_PAGE_ACTION_VIEW } from './cep.constants';
+import {
+  SET_ENDERECO,
+  SET_ENDERECO_VALUE,
+  SET_ENDERECOS,
+  SET_NUMERO_CEP,
+  SET_PAGE_ACTION_VIEW,
+} from './cep.constants';
 
 const buildInitialStatesEndereco = () => ({
   cep: '',
+  numero: '',
   logradouro: '',
   complemento: '',
   bairro: '',
   localidade: '',
   uf: '',
-  unidade: '',
-  ibge: '',
-  gia: '',
-});
-
-const buildInitialStatesControls = () => ({
-  name: 'value',
-  value: '',
-  required: true,
 });
 
 const buildInitialStatesSnackbar = () => ({
@@ -25,76 +23,64 @@ const buildInitialStatesSnackbar = () => ({
 });
 
 const INITIAL_STATES = {
-  numeroCepControls: buildInitialStatesControls(),
-  enderecos: [buildInitialStatesEndereco()],
+  numeroCepControls: '',
+  endereco: buildInitialStatesEndereco(),
+  enderecos: [],
   pageViewActions: {
     snackbar: buildInitialStatesSnackbar(),
   },
 };
 
-export const onChangePageViewActions = (object, value) => ({
+export const setPageViewActions = (object, value) => ({
   type: SET_PAGE_ACTION_VIEW,
   object,
   value,
 });
 
-export const onSetEnderecoAction = (data) => ({
-  type: SET_ENDERECO,
-  data,
+export const setEnderecosActions = (enderecos) => ({
+  type: SET_ENDERECOS,
+  enderecos,
 });
 
-export const onChangeNumeroCepControlsActions = (name, value) => ({
+export const setNumeroCepAction = (name, value) => ({
   type: SET_NUMERO_CEP,
+  object: 'numeroCepControls',
   name,
   value,
 });
 
-function onSetEnderecoHandler(states, actions) {
-  const { data } = actions;
+export const setEnderecoValueAction = (name, value) => ({
+  type: SET_ENDERECO_VALUE,
+  object: 'endereco',
+  name,
+  value,
+});
 
-  const {
-    cep,
-    logradouro,
-    complemento,
-    bairro,
-    localidade,
-    uf,
-    unidade,
-    ibge,
-    gia,
-  } = data;
+export const setEnderecoAction = (value) => ({
+  type: SET_ENDERECO,
+  value,
+});
 
+function setEnderecosHandler(states, actions) {
+  const { enderecos } = actions;
   return {
     ...states,
-    enderecos: [
-      ...states.enderecos,
-      {
-        cep,
-        logradouro,
-        complemento,
-        bairro,
-        localidade,
-        uf,
-        unidade,
-        ibge,
-        gia,
-      },
-    ],
+    enderecos: [...enderecos],
   };
 }
 
-function onChangeNumeroCepControlsHandler(states, actions) {
-  const { name, value } = actions;
+function setValuObject(states, actions) {
+  const { name, value, object } = actions;
   return {
     ...states,
-    numeroCepControls: {
-      ...states.numeroCepControls,
+    [object]: {
+      ...states[object],
       [name]: value,
     },
   };
 }
 
-function onChangePageViewHandler(states, actions) {
+function setPageViewHandler(states, actions) {
   const { object, value } = actions;
 
   return {
@@ -109,14 +95,29 @@ function onChangePageViewHandler(states, actions) {
   };
 }
 
+function setEnderecoHandler(states, actions) {
+  const { value } = actions;
+  return {
+    ...states,
+    endereco: {
+      ...states.endereco,
+      ...value,
+    },
+  };
+}
+
 export default function (states = INITIAL_STATES, actions) {
   switch (actions.type) {
     case SET_NUMERO_CEP:
-      return onChangeNumeroCepControlsHandler(states, actions);
+      return setValuObject(states, actions);
+    case SET_ENDERECO_VALUE:
+      return setValuObject(states, actions);
+    case SET_ENDERECOS:
+      return setEnderecosHandler(states, actions);
     case SET_ENDERECO:
-      return onSetEnderecoHandler(states, actions);
+      return setEnderecoHandler(states, actions);
     case SET_PAGE_ACTION_VIEW:
-      return onChangePageViewHandler(states, actions);
+      return setPageViewHandler(states, actions);
     default:
       return states;
   }

@@ -1,47 +1,64 @@
 import {
   call, select, takeLatest, put,
 } from 'redux-saga/effects';
-import { GET_CEP } from './cep.constants';
+import { ADD_ENDERECO, GET_CEP } from './cep.constants';
 import { findCepByNumber } from '../../services/cep.service';
-import { onChangePageViewActions, onSetEnderecoAction } from './cep.store';
+import {
+  setPageViewActions,
+  setEnderecoAction,
+  setEnderecosActions,
+} from './cep.store';
 
 export const findCepForNumberAction = () => ({
   type: GET_CEP,
 });
 
-function* findCepForApiHandler() {
-  try {
-    const numeroCep = yield select((states) => states.cepStore.numeroCepControls.value);
-    const { data } = yield call(findCepByNumber, numeroCep);
-    const { erro } = data;
+export const addEnderecoActions = () => ({
+  type: ADD_ENDERECO,
+});
 
-    if (!erro) {
-      yield put(onSetEnderecoAction(data));
-      yield put(onChangePageViewActions('snackbar',
-        {
-          open: true,
-          message: 'CEP consultado com sucesso',
-        }));
-
-    } else {
-      yield put(onChangePageViewActions('snackbar',
-        {
-          open: true,
-          message: 'CEP não encontrado',
-        }));
-    }
-  } catch (exception) {
-    yield put((onChangePageViewActions('snackbar',
+function* addEnderecoHandler() {
+  const endereco = yield select((states) => [states.cepStore.endereco]);
+  if (endereco[0].cep === '') {
+    yield put(setPageViewActions('snackbar',
       {
         open: true,
-        message: 'Ocorreu um erro ao tentar consultar o CEP inforamdo.',
-      })));
-    console.log(exception);
-  } finally {
+        message: 'Informe o endereço',
+      }));
+  } else {
+    const enderecos = yield select((states) => states.cepStore.enderecos);
+    yield put(setEnderecosActions([...endereco, ...enderecos]));
+  }
+}
 
+function* enderecoFinded(endereco) {
+  yield put(setEnderecoAction(endereco));
+  yield put(setPageViewActions('enderecoActions', { endereoIsInvalid: false }));
+  yield put(setPageViewActions('snackbar',
+    {
+      open: true,
+      message: 'Endereço encontrado com sucesso',
+    }));
+}
+
+function* findEnderecoForApiHandler() {
+  const numeroCep = yield select((states) => states.cepStore.numeroCepControls.value);
+  const { data } = yield call(findCepByNumber, numeroCep);
+  const { erro } = data;
+
+  if (erro) {
+    yield put(setPageViewActions('enderecoActions', { enderecoNotEmpty: true }));
+    yield put(setPageViewActions('snackbar',
+      {
+        open: true,
+        message: 'Endereço não encontrado',
+      }));
+  } else {
+    yield enderecoFinded(data);
   }
 }
 
 export default function* watchCepSaga() {
-  yield takeLatest(GET_CEP, findCepForApiHandler);
+  yield takeLatest(GET_CEP, findEnderecoForApiHandler);
+  yield takeLatest(ADD_ENDERECO, addEnderecoHandler);
 }
