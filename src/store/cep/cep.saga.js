@@ -33,7 +33,6 @@ function* addEnderecoHandler() {
 
 function* enderecoFinded(endereco) {
   yield put(setEnderecoAction(endereco));
-  yield put(setPageViewActions('enderecoActions', { endereoIsInvalid: false }));
   yield put(setPageViewActions('snackbar',
     {
       open: true,
@@ -47,7 +46,6 @@ function* findEnderecoForApiHandler() {
   const { erro } = data;
 
   if (erro) {
-    yield put(setPageViewActions('enderecoActions', { enderecoNotEmpty: true }));
     yield put(setPageViewActions('snackbar',
       {
         open: true,
